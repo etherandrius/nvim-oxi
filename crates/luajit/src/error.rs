@@ -24,6 +24,9 @@ pub enum Error {
     #[error("Lua memory error: {0}")]
     MemoryError(String),
 
+    #[error("{0}")]
+    CallbackError(String),
+
     #[error("TODO")]
     PopEmptyStack,
 }
@@ -57,12 +60,14 @@ impl Error {
         idx: std::ffi::c_int,
     ) -> Self {
         let expected = std::any::type_name::<T>();
-        let got = crate::utils::debug_type(lstate, idx);
-
-        Self::PopError {
-            ty: expected,
-            message: Some(format!("expected {expected}, got {got} instead",)),
+        unsafe {
+            let got = crate::utils::debug_type(lstate, idx);
+            Self::PopError {
+                ty: expected,
+                message: Some(format!("expected {expected}, got {got} instead",)),
+            }
         }
+
     }
 
     pub fn push_error<M: Into<String>>(ty: &'static str, message: M) -> Self {
@@ -74,5 +79,9 @@ impl Error {
             ty: std::any::type_name::<T>(),
             message: Some(err.to_string()),
         }
+    }
+
+    pub fn callback_error<E: std::error::Error>(err: E) -> Self {
+        Self::CallbackError(err.to_string())
     }
 }

@@ -21,11 +21,15 @@ where
     unsafe extern "C-unwind" fn c_fun(lstate: *mut State) -> c_int {
         let fun = {
             let idx = ffi::lua_upvalueindex(1);
-            let upv = ffi::lua_touserdata(lstate, idx) as *mut Callback;
-            &**upv
+            unsafe {
+                let upv = ffi::lua_touserdata(lstate, idx) as *mut Callback;
+                &**upv
+            }
         };
 
-        fun(lstate).unwrap_or_else(|err| utils::push_error(&err, lstate))
+        unsafe {
+            fun(lstate).unwrap_or_else(|err| utils::push_error(&err, lstate))
+        }
     }
 
     unsafe {
@@ -34,7 +38,7 @@ where
                 let args = A::pop(lstate)?;
                 let ret = fun(args)
                     .into_result()
-                    .map_err(crate::Error::push_error_from_err::<R, _>)?;
+                    .map_err(crate::Error::callback_error)?;
                 ret.push(lstate)
             };
 

@@ -41,7 +41,7 @@ pub const LUA_TUSERDATA: c_int = 7;
 pub const LUA_TTHREAD: c_int = 8;
 
 // https://www.lua.org/manual/5.1/manual.html#lua_CFunction
-pub type CFunction = unsafe extern "C" fn(L: *mut State) -> c_int;
+pub type CFunction = unsafe extern "C-unwind" fn(L: *mut State) -> c_int;
 
 // https://www.lua.org/manual/5.1/manual.html#lua_Integer
 pub type Integer = isize;

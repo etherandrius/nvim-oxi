@@ -65,7 +65,16 @@ impl fmt::Debug for Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Debug::fmt(self, f)
+        if !self.msg.is_null() {
+            let msg = unsafe { CStr::from_ptr(self.msg) };
+            write!(f, "{}", msg.to_string_lossy())
+        } else {
+            match self.r#type {
+                ErrorType::Exception => write!(f, "Exception"),
+                ErrorType::Validation => write!(f, "Validation"),
+                _ => Ok(()),
+            }
+        }
     }
 }
 
